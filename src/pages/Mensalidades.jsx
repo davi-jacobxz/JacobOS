@@ -803,8 +803,8 @@ export default function Mensalidades() {
       {/* MODAL */}
 
       {modalAberto && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
-          <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-white/10 bg-[#15181e] shadow-2xl">
+       <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/70 px-4 pb-28 pt-20 backdrop-blur-sm lg:items-center lg:p-4">
+          <div className="max-h-[calc(100dvh-120px)] w-full max-w-2xl overflow-y-auto rounded-2xl border border-white/10 bg-[#11151b] p-6 shadow-2xl">
             <div className="flex items-center justify-between border-b border-white/10 px-6 py-5">
               <div>
                 <h2 className="text-lg font-semibold text-white">
@@ -1061,7 +1061,7 @@ export default function Mensalidades() {
                             : `${index + 1}ª cobrança`}
                         </div>
 
-                        <div className="mt-1 text-sm text-gray-300">
+                       <div className="md:col-span-2 flex justify-end gap-3 border-t border-white/10 pb-2 pt-5">
                           {data.toLocaleDateString("pt-BR")}
                         </div>
                       </div>
