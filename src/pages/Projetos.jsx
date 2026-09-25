@@ -636,8 +636,8 @@ function Projetos() {
       </div>
 
       {mostrarFormulario && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
-          <div className="max-h-[92vh] w-full max-w-3xl overflow-y-auto rounded-2xl border border-white/10 bg-[#101318] shadow-2xl">
+       <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/70 px-4 pb-28 pt-20 backdrop-blur-sm lg:items-center lg:p-4">
+         <div className="max-h-[calc(100dvh-120px)] w-full max-w-3xl overflow-y-auto rounded-2xl border border-white/10 bg-[#101318] shadow-2xl">
             <div className="flex items-center justify-between border-b border-white/10 p-6">
               <div>
                 <h2 className="text-xl font-bold">
@@ -802,7 +802,7 @@ function Projetos() {
                 </div>
               </div>
 
-            <div className="flex gap-3 pb-2 pt-2">
+            <div className="flex gap-3 border-t border-white/10 pb-2 pt-5">
                 <button
                   type="button"
                   onClick={() => {
