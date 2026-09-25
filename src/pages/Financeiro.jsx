@@ -1,8 +1,7 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   ArrowDownCircle,
   ArrowUpCircle,
-  Check,
   ChevronDown,
   Edit3,
   Filter,
@@ -14,7 +13,6 @@ import {
   X,
 } from "lucide-react";
 import { supabase } from "../lib/supabase";
-import BuscaCliente from "../BuscaCliente";
 
 const CATEGORIAS_ENTRADA = [
   ["venda_site", "Venda de site"],
@@ -90,183 +88,11 @@ function categoriaNome(tipo, categoria) {
   );
 }
 
-function formatarValorInput(valor) {
-  const numeros = String(valor ?? "").replace(/\D/g, "");
-
-  if (!numeros) return "";
-
-  const numero = Number(numeros) / 100;
-
-  return numero.toLocaleString("pt-BR", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
-}
-
-function converterValor(valor) {
-  const texto = String(valor ?? "").trim();
-
-  if (!texto) return 0;
-
-  const limpo = texto.replace(/\./g, "").replace(",", ".");
-
-  return Number(limpo);
-}
-
-function BuscaProjeto({
-  projetos,
-  value,
-  onChange,
-  clienteId,
-}) {
-  const [aberto, setAberto] = useState(false);
-  const [busca, setBusca] = useState("");
-  const ref = useRef(null);
-
-  useEffect(() => {
-    function fechar(evento) {
-      if (ref.current && !ref.current.contains(evento.target)) {
-        setAberto(false);
-      }
-    }
-
-    document.addEventListener("mousedown", fechar);
-
-    return () => {
-      document.removeEventListener("mousedown", fechar);
-    };
-  }, []);
-
-  const projetosDisponiveis = projetos.filter(
-    (projeto) =>
-      !clienteId || projeto.cliente_id === clienteId
-  );
-
-  const projetoSelecionado = projetosDisponiveis.find(
-    (projeto) => projeto.id === value
-  );
-
-  const projetosFiltrados = projetosDisponiveis.filter(
-    (projeto) =>
-      normalizar(projeto.nome).includes(normalizar(busca))
-  );
-
-  return (
-    <div ref={ref} className="relative">
-      <label className="mb-2 block text-sm font-medium text-gray-300">
-        Projeto
-      </label>
-
-      <button
-        type="button"
-        onClick={() => setAberto((estado) => !estado)}
-        disabled={projetosDisponiveis.length === 0}
-        className="flex w-full items-center justify-between rounded-xl border border-white/10 bg-[#0b0d10] px-4 py-3 text-left text-sm text-white outline-none transition hover:border-white/20 disabled:cursor-not-allowed disabled:opacity-50"
-      >
-        <span
-          className={
-            projetoSelecionado ? "text-white" : "text-gray-500"
-          }
-        >
-          {projetoSelecionado?.nome ||
-            (projetosDisponiveis.length === 0
-              ? clienteId
-                ? "Nenhum projeto para este cliente"
-                : "Nenhum projeto cadastrado"
-              : "Pesquisar projeto...")}
-        </span>
-
-        <ChevronDown
-          size={17}
-          className="shrink-0 text-gray-500"
-        />
-      </button>
-
-      {aberto && projetosDisponiveis.length > 0 && (
-        <div className="absolute left-0 right-0 top-full z-[80] mt-2 overflow-hidden rounded-xl border border-white/10 bg-[#15181e] shadow-2xl">
-          <div className="flex items-center gap-2 border-b border-white/10 p-3">
-            <Search
-              size={16}
-              className="shrink-0 text-gray-500"
-            />
-
-            <input
-              autoFocus
-              type="text"
-              value={busca}
-              onChange={(e) => setBusca(e.target.value)}
-              placeholder="Pesquisar projeto..."
-              className="w-full bg-transparent text-sm text-white outline-none placeholder:text-gray-600"
-            />
-
-            {busca && (
-              <button
-                type="button"
-                onClick={() => setBusca("")}
-                className="rounded-md p-1 text-gray-500 hover:bg-white/5 hover:text-white"
-              >
-                <X size={15} />
-              </button>
-            )}
-          </div>
-
-          <div className="max-h-60 overflow-y-auto p-2">
-            <button
-              type="button"
-              onClick={() => {
-                onChange("");
-                setBusca("");
-                setAberto(false);
-              }}
-              className="mb-1 flex w-full items-center rounded-lg px-3 py-3 text-left text-sm text-gray-400 transition hover:bg-white/5 hover:text-white"
-            >
-              Sem projeto
-            </button>
-
-            {projetosFiltrados.length === 0 ? (
-              <div className="px-3 py-4 text-center text-sm text-gray-500">
-                Nenhum projeto encontrado.
-              </div>
-            ) : (
-              projetosFiltrados.map((projeto) => {
-                const selecionado = projeto.id === value;
-
-                return (
-                  <button
-                    key={projeto.id}
-                    type="button"
-                    onClick={() => {
-                      onChange(projeto.id);
-                      setBusca("");
-                      setAberto(false);
-                    }}
-                    className="flex w-full items-center justify-between rounded-lg px-3 py-3 text-left text-sm transition hover:bg-white/5"
-                  >
-                    <span className="truncate text-gray-200">
-                      {projeto.nome}
-                    </span>
-
-                    {selecionado && (
-                      <Check
-                        size={17}
-                        className="shrink-0 text-blue-400"
-                      />
-                    )}
-                  </button>
-                );
-              })
-            )}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
 function Financeiro() {
   const [movimentacoes, setMovimentacoes] = useState([]);
   const [clientes, setClientes] = useState([]);
   const [projetos, setProjetos] = useState([]);
+
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState("");
 
@@ -380,10 +206,8 @@ function Financeiro() {
     setTipo(item.tipo);
     setDescricao(item.descricao || "");
     setCategoria(item.categoria || "outros");
-    setValor(formatarValorInput(item.valor));
-    setDataLancamento(
-      item.data_lancamento || dataHoje()
-    );
+    setValor(String(item.valor ?? ""));
+    setDataLancamento(item.data_lancamento || dataHoje());
     setDataVencimento(item.data_vencimento || "");
     setStatus(item.status || "pendente");
     setFormaPagamento(item.forma_pagamento || "");
@@ -397,13 +221,10 @@ function Financeiro() {
 
   function trocarTipo(novoTipo) {
     setTipo(novoTipo);
+
     setCategoria(
       novoTipo === "entrada" ? "venda_site" : "outros"
     );
-  }
-
-  function alterarValor(evento) {
-    setValor(formatarValorInput(evento.target.value));
   }
 
   async function salvarLancamento() {
@@ -412,7 +233,9 @@ function Financeiro() {
       return;
     }
 
-    const valorNumerico = converterValor(valor);
+    const valorNumerico = Number(
+      String(valor).replace(",", ".")
+    );
 
     if (
       !Number.isFinite(valorNumerico) ||
@@ -486,7 +309,10 @@ function Financeiro() {
         )
       );
     } else {
-      setMovimentacoes((lista) => [data, ...lista]);
+      setMovimentacoes((lista) => [
+        data,
+        ...lista,
+      ]);
     }
 
     setMostrarFormulario(false);
@@ -518,11 +344,15 @@ function Financeiro() {
 
   async function alterarStatus(item) {
     const novoStatus =
-      item.status === "pago" ? "pendente" : "pago";
+      item.status === "pago"
+        ? "pendente"
+        : "pago";
 
     const { data, error } = await supabase
       .from("movimentacoes")
-      .update({ status: novoStatus })
+      .update({
+        status: novoStatus,
+      })
       .eq("id", item.id)
       .select(
         "*, cliente:clientes(id,nome), projeto:projetos(id,nome)"
@@ -549,10 +379,12 @@ function Financeiro() {
       (item) =>
         item.tipo === "entrada" &&
         item.status !== "cancelado" &&
-        item.data_lancamento?.slice(0, 7) === mesAtual
+        item.data_lancamento?.slice(0, 7) ===
+          mesAtual
     )
     .reduce(
-      (total, item) => total + Number(item.valor || 0),
+      (total, item) =>
+        total + Number(item.valor || 0),
       0
     );
 
@@ -561,10 +393,12 @@ function Financeiro() {
       (item) =>
         item.tipo === "saida" &&
         item.status !== "cancelado" &&
-        item.data_lancamento?.slice(0, 7) === mesAtual
+        item.data_lancamento?.slice(0, 7) ===
+          mesAtual
     )
     .reduce(
-      (total, item) => total + Number(item.valor || 0),
+      (total, item) =>
+        total + Number(item.valor || 0),
       0
     );
 
@@ -579,7 +413,8 @@ function Financeiro() {
           item.data_vencimento >= hoje)
     )
     .reduce(
-      (total, item) => total + Number(item.valor || 0),
+      (total, item) =>
+        total + Number(item.valor || 0),
       0
     );
 
@@ -592,7 +427,8 @@ function Financeiro() {
         item.data_vencimento < hoje
     )
     .reduce(
-      (total, item) => total + Number(item.valor || 0),
+      (total, item) =>
+        total + Number(item.valor || 0),
       0
     );
 
@@ -608,7 +444,10 @@ function Financeiro() {
         filtroStatus === "todos" ||
         item.status === filtroStatus;
 
-      if (!correspondeTipo || !correspondeStatus) {
+      if (
+        !correspondeTipo ||
+        !correspondeStatus
+      ) {
         return false;
       }
 
@@ -639,12 +478,14 @@ function Financeiro() {
       : CATEGORIAS_SAIDA;
 
   return (
-    <div className="min-h-screen bg-[#0b0d10] p-8 text-white">
+    <div className="min-h-screen bg-[#0b0d10] p-4 text-white sm:p-6 lg:p-8">
       <div className="mx-auto max-w-7xl">
-        <div className="mb-8 flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
+        {/* CABEÇALHO */}
+
+        <div className="mb-6 flex flex-col gap-4 md:mb-8 md:flex-row md:items-center md:justify-between">
           <div>
             <div className="flex items-center gap-3">
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-emerald-500/20 bg-emerald-500/10">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-emerald-500/20 bg-emerald-500/10">
                 <Wallet
                   size={21}
                   className="text-emerald-400"
@@ -652,11 +493,11 @@ function Financeiro() {
               </div>
 
               <div>
-                <h1 className="text-3xl font-bold tracking-tight">
+                <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
                   Financeiro
                 </h1>
 
-                <p className="mt-1 text-sm text-gray-500">
+                <p className="mt-1 text-xs text-gray-500 sm:text-sm">
                   Controle entradas, despesas,
                   recebimentos e resultado do negócio.
                 </p>
@@ -667,21 +508,23 @@ function Financeiro() {
           <button
             type="button"
             onClick={abrirNovoLancamento}
-            className="flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold transition hover:bg-blue-500"
+            className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold transition hover:bg-blue-500 md:w-auto"
           >
             <Plus size={18} />
             Novo lançamento
           </button>
         </div>
 
-        <div className="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
-          <div className="rounded-2xl border border-white/10 bg-[#101318] p-5">
+        {/* CARDS */}
+
+        <div className="mb-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+          <div className="rounded-2xl border border-white/10 bg-[#101318] p-4 sm:p-5">
             <p className="text-xs font-medium uppercase tracking-wider text-gray-500">
               Entradas no mês
             </p>
 
             <div className="mt-2 flex items-end justify-between gap-3">
-              <span className="text-2xl font-bold text-emerald-400">
+              <span className="text-xl font-bold text-emerald-400 sm:text-2xl">
                 {moeda(entradasMes)}
               </span>
 
@@ -692,13 +535,13 @@ function Financeiro() {
             </div>
           </div>
 
-          <div className="rounded-2xl border border-white/10 bg-[#101318] p-5">
+          <div className="rounded-2xl border border-white/10 bg-[#101318] p-4 sm:p-5">
             <p className="text-xs font-medium uppercase tracking-wider text-gray-500">
               Saídas no mês
             </p>
 
             <div className="mt-2 flex items-end justify-between gap-3">
-              <span className="text-2xl font-bold text-red-400">
+              <span className="text-xl font-bold text-red-400 sm:text-2xl">
                 {moeda(saidasMes)}
               </span>
 
@@ -709,14 +552,14 @@ function Financeiro() {
             </div>
           </div>
 
-          <div className="rounded-2xl border border-white/10 bg-[#101318] p-5">
+          <div className="rounded-2xl border border-white/10 bg-[#101318] p-4 sm:p-5">
             <p className="text-xs font-medium uppercase tracking-wider text-gray-500">
               Resultado do mês
             </p>
 
             <div className="mt-2 flex items-end justify-between gap-3">
               <span
-                className={`text-2xl font-bold ${
+                className={`text-xl font-bold sm:text-2xl ${
                   lucroMes >= 0
                     ? "text-blue-400"
                     : "text-red-400"
@@ -732,13 +575,13 @@ function Financeiro() {
             </div>
           </div>
 
-          <div className="rounded-2xl border border-white/10 bg-[#101318] p-5">
+          <div className="rounded-2xl border border-white/10 bg-[#101318] p-4 sm:p-5">
             <p className="text-xs font-medium uppercase tracking-wider text-gray-500">
               A receber
             </p>
 
             <div className="mt-2 flex items-end justify-between gap-3">
-              <span className="text-2xl font-bold text-amber-400">
+              <span className="text-xl font-bold text-amber-400 sm:text-2xl">
                 {moeda(receber)}
               </span>
 
@@ -749,13 +592,13 @@ function Financeiro() {
             </div>
           </div>
 
-          <div className="rounded-2xl border border-white/10 bg-[#101318] p-5">
+          <div className="rounded-2xl border border-white/10 bg-[#101318] p-4 sm:p-5">
             <p className="text-xs font-medium uppercase tracking-wider text-gray-500">
               Em atraso
             </p>
 
             <div className="mt-2 flex items-end justify-between gap-3">
-              <span className="text-2xl font-bold text-red-400">
+              <span className="text-xl font-bold text-red-400 sm:text-2xl">
                 {moeda(atrasado)}
               </span>
 
@@ -767,8 +610,10 @@ function Financeiro() {
           </div>
         </div>
 
+        {/* LISTA */}
+
         <div className="overflow-hidden rounded-2xl border border-white/10 bg-[#101318]">
-          <div className="flex flex-col gap-4 border-b border-white/10 p-5 lg:flex-row lg:items-center">
+          <div className="flex flex-col gap-4 border-b border-white/10 p-4 sm:p-5 lg:flex-row lg:items-center">
             <div className="flex min-w-0 flex-1 items-center gap-3">
               <Search
                 size={18}
@@ -789,20 +634,20 @@ function Financeiro() {
                 <button
                   type="button"
                   onClick={() => setPesquisa("")}
-                  className="rounded-lg p-2 text-gray-500 hover:bg-white/5 hover:text-white"
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-gray-500 hover:bg-white/5 hover:text-white"
                 >
                   <X size={16} />
                 </button>
               )}
             </div>
 
-            <div className="flex flex-wrap gap-2">
+            <div className="grid grid-cols-2 gap-2 lg:flex">
               <select
                 value={filtroTipo}
                 onChange={(e) =>
                   setFiltroTipo(e.target.value)
                 }
-                className="rounded-xl border border-white/10 bg-[#0b0d10] px-3 py-2.5 text-sm text-gray-300 outline-none"
+                className="min-h-11 rounded-xl border border-white/10 bg-[#0b0d10] px-3 py-2.5 text-xs text-gray-300 outline-none sm:text-sm"
               >
                 <option value="todos">
                   Todos os tipos
@@ -820,7 +665,7 @@ function Financeiro() {
                 onChange={(e) =>
                   setFiltroStatus(e.target.value)
                 }
-                className="rounded-xl border border-white/10 bg-[#0b0d10] px-3 py-2.5 text-sm text-gray-300 outline-none"
+                className="min-h-11 rounded-xl border border-white/10 bg-[#0b0d10] px-3 py-2.5 text-xs text-gray-300 outline-none sm:text-sm"
               >
                 <option value="todos">
                   Todos os status
@@ -838,7 +683,7 @@ function Financeiro() {
             </div>
           </div>
 
-          <div className="p-5">
+          <div className="p-4 sm:p-5">
             {carregando && (
               <div className="flex min-h-72 items-center justify-center">
                 <div className="text-center">
@@ -864,7 +709,7 @@ function Financeiro() {
                 <button
                   type="button"
                   onClick={carregarDados}
-                  className="mt-4 rounded-lg border border-red-400/20 px-4 py-2 text-sm font-medium text-red-300 hover:bg-red-400/10"
+                  className="mt-4 min-h-11 rounded-lg border border-red-400/20 px-4 py-2 text-sm font-medium text-red-300 hover:bg-red-400/10"
                 >
                   Tentar novamente
                 </button>
@@ -895,7 +740,7 @@ function Financeiro() {
                   <button
                     type="button"
                     onClick={abrirNovoLancamento}
-                    className="mt-6 flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold hover:bg-blue-500"
+                    className="mt-6 flex min-h-12 items-center gap-2 rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold hover:bg-blue-500"
                   >
                     <Plus size={18} />
                     Novo lançamento
@@ -1021,14 +866,14 @@ function Financeiro() {
                                   item.status ===
                                   "cancelado"
                                 }
-                                className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition ${
+                                className={`inline-flex min-h-10 items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition ${
                                   item.status ===
                                   "pago"
                                     ? "border-green-500/15 bg-green-500/10 text-green-400"
                                     : item.status ===
-                                      "cancelado"
-                                    ? "border-white/10 bg-white/5 text-gray-500"
-                                    : "border-amber-500/15 bg-amber-500/10 text-amber-400 hover:bg-amber-500/15"
+                                        "cancelado"
+                                      ? "border-white/10 bg-white/5 text-gray-500"
+                                      : "border-amber-500/15 bg-amber-500/10 text-amber-400 hover:bg-amber-500/15"
                                 }`}
                               >
                                 <span className="h-1.5 w-1.5 rounded-full bg-current" />
@@ -1037,9 +882,9 @@ function Financeiro() {
                                 "pago"
                                   ? "Pago"
                                   : item.status ===
-                                    "cancelado"
-                                  ? "Cancelado"
-                                  : "Pendente"}
+                                      "cancelado"
+                                    ? "Cancelado"
+                                    : "Pendente"}
                               </button>
                             </td>
 
@@ -1051,7 +896,8 @@ function Financeiro() {
                                   : "text-red-400"
                               }`}
                             >
-                              {item.tipo === "entrada"
+                              {item.tipo ===
+                              "entrada"
                                 ? "+"
                                 : "-"}{" "}
                               {moeda(item.valor)}
@@ -1064,7 +910,7 @@ function Financeiro() {
                                   onClick={() =>
                                     abrirEdicao(item)
                                   }
-                                  className="rounded-lg p-2 text-gray-500 transition hover:bg-white/5 hover:text-white"
+                                  className="flex h-10 w-10 items-center justify-center rounded-lg text-gray-500 transition hover:bg-white/5 hover:text-white"
                                   title="Editar"
                                 >
                                   <Edit3 size={17} />
@@ -1077,7 +923,7 @@ function Financeiro() {
                                       item.id
                                     )
                                   }
-                                  className="rounded-lg p-2 text-gray-500 transition hover:bg-red-500/10 hover:text-red-400"
+                                  className="flex h-10 w-10 items-center justify-center rounded-lg text-gray-500 transition hover:bg-red-500/10 hover:text-red-400"
                                   title="Excluir"
                                 >
                                   <Trash2 size={17} />
@@ -1085,7 +931,7 @@ function Financeiro() {
 
                                 <button
                                   type="button"
-                                  className="rounded-lg p-2 text-gray-600"
+                                  className="flex h-10 w-10 items-center justify-center rounded-lg text-gray-600"
                                   title="Mais ações"
                                 >
                                   <MoreVertical
@@ -1105,20 +951,21 @@ function Financeiro() {
         </div>
       </div>
 
+      {/* MODAL NOVO / EDITAR LANÇAMENTO */}
+
       {mostrarFormulario && (
-        <div className="max-h-[calc(100dvh-140px)] w-full max-w-3xl overflow-y-auto rounded-2xl border border-white/10 bg-[#101318] shadow-2xl">
-         <div className="max-h-[calc(100dvh-140px)] w-full max-w-3xl overflow-y-auto rounded-2xl border border-white/10 bg-[#101318] shadow-2xl">
-            <div className="flex items-center justify-between border-b border-white/10 p-6">
-              <div>
-                <h2 className="text-xl font-bold">
+        <div className="fixed inset-0 z-[80] flex items-start justify-center overflow-y-auto bg-black/70 px-4 pb-24 pt-20 backdrop-blur-sm sm:pb-20 lg:items-center lg:p-4">
+          <div className="my-auto max-h-[calc(100dvh-110px)] w-full max-w-3xl overflow-y-auto rounded-2xl border border-white/10 bg-[#101318] shadow-2xl">
+            <div className="sticky top-0 z-10 flex items-center justify-between border-b border-white/10 bg-[#101318]/95 p-4 backdrop-blur-xl sm:p-6">
+              <div className="min-w-0 pr-3">
+                <h2 className="text-lg font-bold sm:text-xl">
                   {editandoId
                     ? "Editar lançamento"
                     : "Novo lançamento"}
                 </h2>
 
-                <p className="mt-1 text-sm text-gray-500">
-                  Registre uma entrada ou despesa do
-                  negócio.
+                <p className="mt-1 text-xs text-gray-500 sm:text-sm">
+                  Registre uma entrada ou despesa do negócio.
                 </p>
               </div>
 
@@ -1128,13 +975,13 @@ function Financeiro() {
                   setMostrarFormulario(false);
                   limparFormulario();
                 }}
-                className="rounded-lg p-2 text-gray-500 hover:bg-white/5 hover:text-white"
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-gray-500 hover:bg-white/5 hover:text-white"
               >
                 <X size={20} />
               </button>
             </div>
 
-            <div className="space-y-5 p-6">
+            <div className="space-y-5 p-4 sm:p-6">
               {erroFormulario && (
                 <div className="rounded-xl border border-red-500/20 bg-red-500/10 p-3 text-sm text-red-400">
                   {erroFormulario}
@@ -1147,7 +994,7 @@ function Financeiro() {
                   onClick={() =>
                     trocarTipo("entrada")
                   }
-                  className={`rounded-xl border p-4 text-left transition ${
+                  className={`min-h-20 rounded-xl border p-4 text-left transition ${
                     tipo === "entrada"
                       ? "border-emerald-500/30 bg-emerald-500/10"
                       : "border-white/10 bg-[#0b0d10] hover:bg-white/5"
@@ -1176,7 +1023,7 @@ function Financeiro() {
                   onClick={() =>
                     trocarTipo("saida")
                   }
-                  className={`rounded-xl border p-4 text-left transition ${
+                  className={`min-h-20 rounded-xl border p-4 text-left transition ${
                     tipo === "saida"
                       ? "border-red-500/30 bg-red-500/10"
                       : "border-white/10 bg-[#0b0d10] hover:bg-white/5"
@@ -1213,7 +1060,7 @@ function Financeiro() {
                       setDescricao(e.target.value)
                     }
                     placeholder="Ex.: Desenvolvimento do site da Clínica X"
-                    className="w-full rounded-xl border border-white/10 bg-[#0b0d10] px-4 py-3 text-sm text-white outline-none transition focus:border-blue-500"
+                    className="min-h-12 w-full rounded-xl border border-white/10 bg-[#0b0d10] px-4 py-3 text-sm text-white outline-none transition focus:border-blue-500"
                   />
                 </div>
 
@@ -1227,7 +1074,7 @@ function Financeiro() {
                     onChange={(e) =>
                       setCategoria(e.target.value)
                     }
-                    className="w-full rounded-xl border border-white/10 bg-[#0b0d10] px-4 py-3 text-sm text-gray-300 outline-none"
+                    className="min-h-12 w-full rounded-xl border border-white/10 bg-[#0b0d10] px-4 py-3 text-sm text-gray-300 outline-none"
                   >
                     {categorias.map(
                       ([id, nome]) => (
@@ -1247,20 +1094,17 @@ function Financeiro() {
                     Valor *
                   </label>
 
-                  <div className="relative">
-                    <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-sm text-gray-500">
-                      R$
-                    </span>
-
-                    <input
-                      type="text"
-                      inputMode="decimal"
-                      value={valor}
-                      onChange={alterarValor}
-                      placeholder="0,00"
-                      className="w-full rounded-xl border border-white/10 bg-[#0b0d10] py-3 pl-11 pr-4 text-sm text-white outline-none transition focus:border-blue-500"
-                    />
-                  </div>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={valor}
+                    onChange={(e) =>
+                      setValor(e.target.value)
+                    }
+                    placeholder="0,00"
+                    className="min-h-12 w-full rounded-xl border border-white/10 bg-[#0b0d10] px-4 py-3 text-sm text-white outline-none transition focus:border-blue-500"
+                  />
                 </div>
 
                 <div>
@@ -1276,7 +1120,7 @@ function Financeiro() {
                         e.target.value
                       )
                     }
-                    className="w-full rounded-xl border border-white/10 bg-[#0b0d10] px-4 py-3 text-sm text-white outline-none transition focus:border-blue-500"
+                    className="min-h-12 w-full rounded-xl border border-white/10 bg-[#0b0d10] px-4 py-3 text-sm text-white outline-none transition focus:border-blue-500"
                   />
                 </div>
 
@@ -1293,7 +1137,7 @@ function Financeiro() {
                         e.target.value
                       )
                     }
-                    className="w-full rounded-xl border border-white/10 bg-[#0b0d10] px-4 py-3 text-sm text-white outline-none transition focus:border-blue-500"
+                    className="min-h-12 w-full rounded-xl border border-white/10 bg-[#0b0d10] px-4 py-3 text-sm text-white outline-none transition focus:border-blue-500"
                   />
                 </div>
 
@@ -1307,7 +1151,7 @@ function Financeiro() {
                     onChange={(e) =>
                       setStatus(e.target.value)
                     }
-                    className="w-full rounded-xl border border-white/10 bg-[#0b0d10] px-4 py-3 text-sm text-gray-300 outline-none"
+                    className="min-h-12 w-full rounded-xl border border-white/10 bg-[#0b0d10] px-4 py-3 text-sm text-gray-300 outline-none"
                   >
                     <option value="pendente">
                       Pendente
@@ -1335,7 +1179,7 @@ function Financeiro() {
                         e.target.value
                       )
                     }
-                    className="w-full rounded-xl border border-white/10 bg-[#0b0d10] px-4 py-3 text-sm text-gray-300 outline-none"
+                    className="min-h-12 w-full rounded-xl border border-white/10 bg-[#0b0d10] px-4 py-3 text-sm text-gray-300 outline-none"
                   >
                     <option value="">
                       Não informado
@@ -1355,24 +1199,73 @@ function Financeiro() {
                 </div>
 
                 <div>
-                  <BuscaCliente
-                    clientes={clientes}
+                  <label className="mb-2 block text-sm font-medium text-gray-300">
+                    Cliente
+                  </label>
+
+                  <select
                     value={clienteId}
-                    onChange={(id) => {
-                      setClienteId(id);
+                    onChange={(e) => {
+                      setClienteId(
+                        e.target.value
+                      );
                       setProjetoId("");
                     }}
-                    label="Cliente"
-                  />
+                    className="min-h-12 w-full rounded-xl border border-white/10 bg-[#0b0d10] px-4 py-3 text-sm text-gray-300 outline-none"
+                  >
+                    <option value="">
+                      Sem cliente
+                    </option>
+
+                    {clientes.map(
+                      (cliente) => (
+                        <option
+                          key={cliente.id}
+                          value={cliente.id}
+                        >
+                          {cliente.nome}
+                        </option>
+                      )
+                    )}
+                  </select>
                 </div>
 
                 <div>
-                  <BuscaProjeto
-                    projetos={projetos}
+                  <label className="mb-2 block text-sm font-medium text-gray-300">
+                    Projeto
+                  </label>
+
+                  <select
                     value={projetoId}
-                    onChange={setProjetoId}
-                    clienteId={clienteId}
-                  />
+                    onChange={(e) =>
+                      setProjetoId(
+                        e.target.value
+                      )
+                    }
+                    className="min-h-12 w-full rounded-xl border border-white/10 bg-[#0b0d10] px-4 py-3 text-sm text-gray-300 outline-none"
+                  >
+                    <option value="">
+                      Sem projeto
+                    </option>
+
+                    {projetos
+                      .filter(
+                        (projeto) =>
+                          !clienteId ||
+                          projeto.cliente_id ===
+                            clienteId
+                      )
+                      .map(
+                        (projeto) => (
+                          <option
+                            key={projeto.id}
+                            value={projeto.id}
+                          >
+                            {projeto.nome}
+                          </option>
+                        )
+                      )}
+                  </select>
                 </div>
 
                 <div className="md:col-span-2">
@@ -1384,7 +1277,9 @@ function Financeiro() {
                     rows="3"
                     value={observacoes}
                     onChange={(e) =>
-                      setObservacoes(e.target.value)
+                      setObservacoes(
+                        e.target.value
+                      )
                     }
                     placeholder="Informações adicionais..."
                     className="w-full resize-none rounded-xl border border-white/10 bg-[#0b0d10] px-4 py-3 text-sm text-white outline-none transition focus:border-blue-500"
@@ -1400,7 +1295,7 @@ function Financeiro() {
                         e.target.checked
                       )
                     }
-                    className="h-4 w-4 accent-blue-600"
+                    className="h-5 w-5 accent-blue-600"
                   />
 
                   <div>
@@ -1409,21 +1304,23 @@ function Financeiro() {
                     </p>
 
                     <p className="mt-1 text-xs text-gray-600">
-                      Marque para indicar cobrança ou
-                      custo que se repete.
+                      Marque para indicar cobrança
+                      ou custo que se repete.
                     </p>
                   </div>
                 </label>
               </div>
 
-              <div className="flex gap-3 border-t border-white/10 pt-5">
+              {/* BOTÕES — ÁREA SEGURA NO MOBILE */}
+
+              <div className="flex gap-3 border-t border-white/10 pb-2 pt-5">
                 <button
                   type="button"
                   onClick={() => {
                     setMostrarFormulario(false);
                     limparFormulario();
                   }}
-                  className="flex-1 rounded-xl border border-white/10 px-4 py-3 text-sm font-medium text-gray-300 hover:bg-white/5"
+                  className="min-h-12 flex-1 rounded-xl border border-white/10 px-4 py-3 text-sm font-medium text-gray-300 hover:bg-white/5"
                 >
                   Cancelar
                 </button>
@@ -1432,15 +1329,18 @@ function Financeiro() {
                   type="button"
                   onClick={salvarLancamento}
                   disabled={salvando}
-                  className="flex-1 rounded-xl bg-blue-600 px-4 py-3 text-sm font-semibold transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="min-h-12 flex-1 rounded-xl bg-blue-600 px-4 py-3 text-sm font-semibold transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {salvando
                     ? "Salvando..."
                     : editandoId
-                    ? "Salvar alterações"
-                    : "Cadastrar lançamento"}
+                      ? "Salvar alterações"
+                      : "Cadastrar lançamento"}
                 </button>
               </div>
+
+              {/* Pequena margem de segurança para a barra inferior */}
+              <div className="h-2 sm:hidden" />
             </div>
           </div>
         </div>
