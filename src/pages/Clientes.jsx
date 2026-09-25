@@ -77,6 +77,19 @@ function Clientes() {
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
+  function formatarWhatsapp(valor) {
+  const numeros = String(valor || "").replace(/\D/g, "").slice(0, 11);
+
+  if (numeros.length <= 2) {
+    return numeros.length ? `(${numeros}` : "";
+  }
+
+  if (numeros.length <= 7) {
+    return `(${numeros.slice(0, 2)}) ${numeros.slice(2)}`;
+  }
+
+  return `(${numeros.slice(0, 2)}) ${numeros.slice(2, 7)}-${numeros.slice(7)}`;
+}
   const [documento, setDocumento] = useState("");
   const [status, setStatus] = useState("ativo");
   const [observacoes, setObservacoes] = useState("");
@@ -121,7 +134,7 @@ function Clientes() {
     const dados = {
       nome: nome.trim(),
       email: email.trim() || null,
-      whatsapp: whatsapp.trim() || null,
+      whatsapp: whatsapp ? formatarWhatsapp(whatsapp) : null,
       documento: documento.trim() || null,
       status,
       observacoes: observacoes.trim() || null,
@@ -626,7 +639,7 @@ function Clientes() {
                   <input
                     type="text"
                     value={whatsapp}
-                    onChange={(e) => setWhatsapp(e.target.value)}
+                  onChange={(e) => setWhatsapp(formatarWhatsapp(e.target.value))}
                     placeholder="(16) 99999-9999"
                     className="w-full rounded-xl border border-white/10 bg-[#0b0d10] px-4 py-3 text-sm text-white outline-none transition focus:border-blue-500"
                   />
